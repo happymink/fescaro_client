@@ -34,12 +34,21 @@ public class ClientApplication extends Application implements EventHandler<Actio
     private TextField userName;
     private TextField input;
     private PauseTransition pause = new PauseTransition(Duration.millis(350));
+    private long receiveTime;
 
     public static void main(String[] args) {
         launch();
     }
 
-    private void startClient(String IP, int port) {
+    public long getReceiveTime(){
+        return this.receiveTime;
+    }
+
+    private void setReceiveTime(){
+        this.receiveTime = System.nanoTime();
+    }
+
+    public void startClient(String IP, int port) {
         Thread thread = new Thread(() -> {
             try {
                 socket = new Socket(IP, port);
@@ -61,7 +70,7 @@ public class ClientApplication extends Application implements EventHandler<Actio
         thread.start();
     }
 
-    private void stopClient() {
+    public void stopClient() {
         try {
             if (socket != null && !socket.isClosed()) {
                 OutputStream out = socket.getOutputStream();
@@ -87,7 +96,7 @@ public class ClientApplication extends Application implements EventHandler<Actio
         }
     }
 
-    private void receive() {
+    public void receive() {
         while (true) {
             try {
                 InputStream in = socket.getInputStream();
@@ -97,8 +106,9 @@ public class ClientApplication extends Application implements EventHandler<Actio
                 String message = new String(buffer, 0, length, StandardCharsets.UTF_8);
 
                 checkCloseMessage(message);
-                Platform.runLater(() -> textArea.appendText(message));
+                setReceiveTime();
 
+                Platform.runLater(() -> textArea.appendText(message));
             } catch (Exception e) {
                 stopClient();
                 break;
@@ -106,7 +116,7 @@ public class ClientApplication extends Application implements EventHandler<Actio
         }
     }
 
-    private void send(String message) {
+    public void send(String message) {
         Thread thread = new Thread(() -> {
             try {
                 OutputStream out = socket.getOutputStream();
